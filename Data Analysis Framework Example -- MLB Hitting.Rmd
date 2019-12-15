@@ -1,0 +1,285 @@
+---
+title: "Data Analysis Framework Example -- MLB Hitting"
+author: "Patrick Ward"
+date: "12/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load Packages
+
+```{r warning = F}
+suppressPackageStartupMessages(library(tidyverse))
+library(Lahman)
+```
+
+
+## Step 1: Research Question/Problem Statement
+
+1) What is the relationship between hits (H) and runs batted in (RBI) in major league baseball players?
+
+##### NOTES:
+
+- Hypothesis: A higher number of H will lead to greater RBI in a season
+- Potential limitations: Other variables may influence the relationship between H and RBI, requiring additional data for future analysis. For example, where in the batting order the batter hits, the number of opportunities the batter has to hit with runners in scoring position, the type of pitching the batter faced that season, etc.
+
+
+
+## Step 2: Data Collection/Measurement Strategy
+
+1) What type of data is required
+
+- Data sources: Lahman Databases Batting table
+- Data is available in the 'Lahman' package within R
+- Data issues: Batting data is provided in the table from 1871 through 2016. Older seasons may be missing data.
+
+2) Collection/Measurement
+
+- No additional data needs to be collected at this time
+
+3) Data Cleaning
+
+```{r}
+
+# Change the data set from 'Batting' to df, to shorten the name for coding purposes
+
+df <- Batting
+head(df)
+
+# check the number of NAs in the H and RBI column
+
+sum(is.na(df$H))
+sum(is.na(df$RBI))
+```
+
+
+> Looks like there are no NA's in the H column but there are 424 in the RBI column. See what seasons these missing values are located in.
+
+```{r}
+
+df %>%
+  filter(is.na(RBI)) %>%
+  count(yearID)
+
+```
+
+
+> Looks like the missing values are only located in years 1882 and 1884.
+
+> For the purposes of this analysis we will look at the mopre modern years and constrain ourselves to seasons 2010-2016
+
+```{r}
+df <- df %>% filter(yearID > 2009)
+df %>% dim()
+
+# We are dealing with 9966 rows and 22 columns of data
+
+```
+
+
+> It's possible that some players may only have a few at bats (AB). We should evaluate this to see if we need to have an inclusion criteria.
+
+```{r}
+
+boxplot(df$AB, horizontal = T,
+        xlab = "At Bats",
+        main = "Distribution of At Bats from 2010-2016\nRed Line = Avg AB",
+        adj = 0,
+        col = "light grey")
+abline(v = mean(df$AB), col = "red", lwd = 2)
+
+quantile(df$AB)
+
+```
+
+
+> We see that the data is vert right skewed, with a large number of players with a small number of ABs and then a bunch of players with a lot of ABs. This is why the median (thick black line insde of the box, representing the IQR) is so low relative to the mean (thick red line).
+
+> Let's just concentracte on players with greater than or equal to 171 ABs (the 75th percentile). Obviously this is going to change how we interpret our outcome given that players with lots of ABs will have more opportunities for hits and potentially more opportunities to generate runs.
+
+
+```{r}
+df <- df %>% filter(AB >= 171)
+df %>% dim()
+
+# We now have 2495 rows and 22 columns to work with
+
+```
+
+
+## Step 3: Visualize & Summarize Data
+
+- Visuals of H and RBI
+
+```{r}
+## All seasons grouped together
+
+# Hits
+df %>%
+  ggplot(aes(x = H)) +
+  geom_density(fill = "green", alpha = 0.6) +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(H)), color = "red", size = 1.2) +
+  xlim(0, 300) +
+  ggtitle("Season Hit Totals for Players with >= 171 AB (Seasons 2010-2016)", 
+          subtitle = "Red Line = Average Hits")
+
+# RBI
+df %>%
+  ggplot(aes(x = RBI)) +
+  geom_density(fill = "blue", alpha = 0.6) +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(RBI)), color = "red", size = 1.2) +
+  xlim(0, 140) +
+  ggtitle("Season RBI Totals for Players with >= 171 AB (Seasons 2010-2016)", 
+          subtitle = "Red Line = Average Hits")
+
+
+```
+
+
+- Looks like the average number of hits in a season is around 100 and the average numnber of RBI is around 50.
+- Plot their relationship to each other
+
+```{r}
+ggplot(df, aes(x = H, y = RBI)) +
+  geom_jitter(color = "grey", alpha = 0.8) +
+  geom_smooth(method = "lm", fill = "red") +
+  ggtitle("Relationship between H and RBI",
+          subtitle = "Seasons 2010-2016") +
+  theme_light()
+```
+
+
+> Okay, so there is a relationship between H and RBI
+> Is this relationship at all influened by Season (perhaps changings in the scoring environment could influence this relationship in some way from one season to the next?)
+
+```{r}
+# Hits by season
+df %>%
+  ggplot(aes(x = H)) +
+  geom_density(fill = "green", alpha = 0.6) +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(H)), color = "red", size = 1.2) +
+  xlim(0, 300) +
+  ggtitle("Season Hit Totals for Players with >= 171 AB (Seasons 2010-2016)", 
+          subtitle = "Red Line = Average Hits") +
+  facet_wrap(~yearID)
+
+# RBI by season
+df %>%
+  ggplot(aes(x = RBI)) +
+  geom_density(fill = "blue", alpha = 0.6) +
+  theme_bw() +
+  geom_vline(aes(xintercept = mean(RBI)), color = "red", size = 1.2) +
+  xlim(0, 140) +
+  ggtitle("Season RBI Totals for Players with >= 171 AB (Seasons 2010-2016)", 
+          subtitle = "Red Line = Average Hits") +
+  facet_wrap(~yearID)
+
+# Relationship between H and RBI by season
+ggplot(df, aes(x = H, y = RBI)) +
+  geom_jitter(color = "grey", alpha = 0.8) +
+  geom_smooth(method = "lm", fill = "red") +
+  ggtitle("Relationship between H and RBI",
+          subtitle = "Seasons 2010-2016") +
+  theme_light() +
+  facet_wrap(~yearID)
+
+```
+
+> Everything seems relatively consistent from year to year
+
+- Produce summary statistics for H and RBI
+
+```{r}
+df %>%
+  summarize_at(c("H", "RBI"), .funs = funs(mean, sd))
+
+```
+
+Mean & SD
+
+> H = 103 ± 43
+
+> RBI = 49 ± 26
+
+
+- Calculate the correlation
+
+```{r}
+with(df, cor.test(H, RBI))
+```
+
+> The correlation between H and AB is 0.82 [95% CI: 0.80, 0.83]
+
+
+## Step 4: Model Development/Interpretation
+
+- We will just build a simple regression model for this example
+
+```{r}
+fit_lm <- lm(RBI ~ H, data = df)
+summary(fit_lm)
+```
+
+
+> The model explains about 66% of the variability observed in RBI.
+
+> The coefficient for H suggests that for a one unit increase in H, on average we would see an approximate 0.48 increase in RBIs. Thus, 10 extra AB could lead to about 5 extra RBI (10 * 0.48).
+
+## Step 5: Model Evaluation
+
+- Plot model diagnostics
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit_lm)
+```
+
+> A little fanning out in the pattern of the residuals againsts predicted values plot (upper left) indicating that the variance is not consistent across the range values. 
+
+> The upper right plot suggests the residuals are relatively normally distributed
+
+> Other diagnostic criteria can be checked. For example, hat values (aka, leverage -- bottom right) and Cook's distance, which can inform us about how an individual case's may be influencing the model's ability to make predictions across all cases in the data.
+
+- Other ways of plotting that can help understand the model
+
+```{r}
+
+hist(resid(fit_lm), col = "grey", main = "Model Residuals", xlab = "Residuals")
+
+df %>%
+  mutate(Pred = fitted(fit_lm)) %>% 
+  ggplot(aes(x = Pred, y = RBI)) +
+  geom_jitter(aes(color = H), alpha = 0.8) +
+  geom_abline(intercept = 0, slope = 1, color = "red", size = 2) +
+  theme_light() +
+  labs(title = "Predicted vs Actual RBI") +
+  expand_limits(y = 0, x = 0)
+
+```
+
+> Here we look at the residuals in a histogram to see if they are normally distributed.
+
+> We also produced a plot of the predicted RBI vs the actual RBI. The plot contains a line of equality (if the model prediction was 100% correct, every single dot would fall directly on that line). I've colored the dots by the number of H a batter had so that we can better see where the model makes some mistakes. The lighter colored dots indicate more H and we can see that to the far right of the plot, when thre are more H, the errors between predicted and actual RBI begin to increase.
+
+- Calculate model RMSE
+
+```{r}
+
+rmse <- sqrt(mean(fit_lm$resid^2))
+rmse
+
+```
+
+
+## Step 6: Communication of Results
+
+1) The research question was to examine the relationship between H and RBI in major league baseball players. It appears that there is a relationship between these two variables with more hits yielding a higher number of Runs. However, with an increase in hits the model predictions become more noisy.
+
+2) Better predictions could be made with more data that can provide context around hits (situation, pitching, line up order, etc) and should be collected for future analysis.
+
