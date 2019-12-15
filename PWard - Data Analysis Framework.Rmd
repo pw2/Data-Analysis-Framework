@@ -1,0 +1,75 @@
+---
+title: "Data Analysis Framework"
+author: "Patrick Ward"
+date: "12/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Analysis Framework
+
+> The objective is to provide an easy to follow framework for analysis that allows the analyst or PhD student to walk through their entire approach in a step-by-step manner with their colleagues or PhD supervisors.
+
+> In each of the 6-steps, the researcher is to provide their code, outputs for the code, and any comments/thoughts that may help the reader interpret the approach that was taken.
+
+## Step 1: Research Question/Problem Statement
+
+1) Research Question/Problem Statement #1
+
+2) Research Question/Problem Statement #2
+
+##### NOTES:
+
+Provide any additional thoughts around the research question
+
+- Hypothesis
+- Potential issues or challenges
+- Potential limitations
+- Etc.
+
+
+## Step 2: Data Collection/Measurement Strategy
+
+1) What type of data is required
+
+- Data sources (database, websites, data collection, etc.)
+- Structure of the data
+- Data issues (missing data, messy data, etc.)
+
+2) Collection/Measurement
+
+- If data needs to be collected, what are the measurements being taken (clearly define the procedures and standardization)?
+- Are the measurements valid and reliable (is there potentially a need to add a research step here and conducting your own validity/reliability study before proceeding)?
+
+3) Data Cleaning
+
+- What pre-processing steps were taken?
+- Clearly walk through the data cleanning process.
+- Is any data missing, if so how much?
+- Describe any imputation process for missing data.
+- If any data was removed prior to analysis explain why.
+
+## Step 3: Visualize & Summarize Data
+
+- Once data has been collected and cleaned, provide an overview of the data using summarize statistics and visuals.
+
+- Offer interpretation of visuals that may help guide the model building process or generate discussion about any underlying trends in the data specific to the research question.
+
+## Step 4: Model Development/Interpretation
+
+- Iteratively build models (simple to complex).
+- Interpret the results of each model to explain why a more complex model or different modelling strategy may be required.
+
+## Step 5: Model Evaluation
+
+- Evaluation the final model(s), describing model errors, model accuracy, residuals, assumptions, etc.
+
+## Step 6: Communication of Results
+
+- Communicate the results of the final model(s) in a clear manner using visualizations and language that is understandable to the end user.
+- Explain whether or not the research question has been answered.
+- Clearly discuss any limitations of the analysis.
+- Offer suggestions for future analysis or perhaps other data sets that may be incorporated to provide a more contextual answer to the research question.
